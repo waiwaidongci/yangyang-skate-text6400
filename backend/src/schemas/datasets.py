@@ -12,4 +12,5 @@ class DatasetInfo(BaseModel):
     id: int
     name: str
     checksum: str
+    revision: int = 1
     count: int

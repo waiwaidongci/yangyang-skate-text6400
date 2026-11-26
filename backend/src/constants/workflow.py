@@ -12,6 +12,8 @@ class RunStatus(StrEnum):
     RUNNING = 'running'
     COMPLETED = 'completed'
     FAILED = 'failed'
+    STALE = 'stale'
+    INVALIDATED = 'invalidated'
 
 
 class Decision(StrEnum):

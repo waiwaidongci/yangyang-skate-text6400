@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from src.controllers.dependencies import Actor, Admin, Db, Writer
 from src.controllers.report import report_csv, report_detail
@@ -17,6 +17,12 @@ def list_all(session: Db, actor: Actor):
 @router.post('', response_model=RunInfo, status_code=202)
 def create(payload: RunCreate, session: Db, actor: Writer):
     return runs.create_run(session, payload, actor)
+
+
+@router.post('/{run_id}/recompute', response_model=RunInfo, status_code=202)
+@router.post('/{run_id}/rerun', response_model=RunInfo, status_code=202)
+def recompute(run_id: int, session: Db, actor: Writer, payload: dict | None = Body(default=None)):
+    return runs.recompute_run(session, run_id, actor, payload)
 
 
 @router.get('/{run_id}')

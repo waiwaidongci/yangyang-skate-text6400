@@ -10,6 +10,7 @@ class Run(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String(140))
     dataset_id: Mapped[int] = mapped_column(ForeignKey('datasets.id'), index=True)
+    dataset_checksum: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     created_by: Mapped[int] = mapped_column(ForeignKey('accounts.id'))
     created_at: Mapped[str] = mapped_column(String(32))
     status: Mapped[str] = mapped_column(String(16), index=True)

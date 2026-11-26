@@ -9,6 +9,7 @@ from src.domain.project import analyze
 from src.models.dataset import Dataset
 from src.models.run import Run
 from src.services.audit import record
+from src.services.catalog import checksum_rows
 
 
 def recover_jobs():
@@ -44,7 +45,20 @@ def execute(job):
         error_message = '计算遇到内部错误，请检查台账后重试。'
     with Session.begin() as session:
         run = session.get(Run, run_id)
-        run.status = RunStatus.FAILED if error_message is not None else RunStatus.COMPLETED
-        run.result = result
-        run.error = error_message
-        record(session, 'run.' + run.status, run.id)
+        dataset = session.get(Dataset, run.dataset_id) if run is not None else None
+        source_changed = bool(
+            run is not None and dataset is not None and run.dataset_checksum
+            and run.dataset_checksum != checksum_rows(dataset.rows)
+        )
+        if run is None:
+            logging.getLogger(__name__).error('计算任务 %s 找不到运行记录', run_id)
+        elif source_changed or run.status == RunStatus.STALE:
+            run.status = RunStatus.STALE
+            run.result = None
+            run.error = '计算期间台账被晚到复核记录修改，旧结果已失效，请重新发起运行。'
+            record(session, 'run.stale', run.id)
+        else:
+            run.status = RunStatus.FAILED if error_message is not None else RunStatus.COMPLETED
+            run.result = result
+            run.error = error_message
+            record(session, 'run.' + run.status, run.id)
